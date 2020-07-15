@@ -84,11 +84,14 @@ class PathReformatWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
   def onSelectNode(self):
     inputPath = self.ui.inputSelector.currentNode()
     self.logic.inputPath = inputPath
+    # May be no longer needed since slice view is positioned at 0
     self.logic.resetSliceNodeOrientationToDefault()
     self.logic.fillPathArray()
     self.logic.setSliderWidget(self.ui.positionIndexSliderWidget)
     if inputPath is not None:
         self.ui.hideCheckBox.setChecked(not inputPath.GetDisplayVisibility())
+    # Position slice view at first point
+    self.logic.process(0)
     
   def onRadioRed(self):
     sliceNodeName = "vtkMRMLSliceNodeRed"
