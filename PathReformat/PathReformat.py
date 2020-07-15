@@ -173,7 +173,6 @@ class PathReformatLogic(ScriptedLoadableModuleLogic):
   def process(self, value):
     if self.inputSliceNode is None or self.inputPath is None:
         return
-    self.resetSliceNodeOrientationToDefault()
     point = self.pathArray[int(value)]
     direction = self.pathArray[int(value) + 1] - point
     self.reformatLogic.SetSliceOrigin(self.inputSliceNode, point[0], point[1], point[2])
