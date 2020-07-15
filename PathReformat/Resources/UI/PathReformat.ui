@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>354</width>
+    <width>363</width>
     <height>404</height>
    </rect>
   </property>
@@ -141,6 +141,32 @@
     </widget>
    </item>
    <item>
+    <widget class="qMRMLCollapsibleButton" name="moreCollapsibleButton">
+     <property name="text">
+      <string>More</string>
+     </property>
+     <property name="checked">
+      <bool>false</bool>
+     </property>
+     <layout class="QFormLayout" name="formLayout">
+      <item row="0" column="0">
+       <widget class="QLabel" name="label_4">
+        <property name="text">
+         <string>Hide path:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QCheckBox" name="hideCheckBox">
+        <property name="text">
+         <string/>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
     <spacer name="verticalSpacer">
      <property name="orientation">
       <enum>Qt::Vertical</enum>
@@ -166,6 +192,12 @@
    <class>ctkSliderWidget</class>
    <extends>QWidget</extends>
    <header>ctkSliderWidget.h</header>
+  </customwidget>
+  <customwidget>
+   <class>qMRMLCollapsibleButton</class>
+   <extends>ctkCollapsibleButton</extends>
+   <header>qMRMLCollapsibleButton.h</header>
+   <container>1</container>
   </customwidget>
   <customwidget>
    <class>qMRMLNodeComboBox</class>

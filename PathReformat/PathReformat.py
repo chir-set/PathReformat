@@ -79,12 +79,16 @@ class PathReformatWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self.ui.redRadioButton.connect("clicked()", self.onRadioRed)
     self.ui.greenRadioButton.connect("clicked()", self.onRadioGreen)
     self.ui.yellowRadioButton.connect("clicked()", self.onRadioYellow)
+    self.ui.hideCheckBox.connect("clicked()", self.onHidePath)
     
   def onSelectNode(self):
-    self.logic.inputPath = self.ui.inputSelector.currentNode()
+    inputPath = self.ui.inputSelector.currentNode()
+    self.logic.inputPath = inputPath
     self.logic.resetSliceNodeOrientationToDefault()
     self.logic.fillPathArray()
     self.logic.setSliderWidget(self.ui.positionIndexSliderWidget)
+    if inputPath is not None:
+        self.ui.hideCheckBox.setChecked(not inputPath.GetDisplayVisibility())
     
   def onRadioRed(self):
     sliceNodeName = "vtkMRMLSliceNodeRed"
@@ -100,6 +104,12 @@ class PathReformatWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     sliceNodeName = "vtkMRMLSliceNodeYellow"
     self.logic.set2DView("vtkMRMLSliceNodeYellow")
     slicer.modules.reformat.widgetRepresentation().setEditedNode(slicer.util.getNode(sliceNodeName))
+    
+  def onHidePath(self):
+    path = self.ui.inputSelector.currentNode()
+    if path is None:
+        return
+    path.SetDisplayVisibility(not self.ui.hideCheckBox.checked)
 #
 # PathReformatLogic
 #
