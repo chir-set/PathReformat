@@ -71,7 +71,7 @@ class PathReformatWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self.logic = PathReformatLogic()
 
     slicer.modules.reformat.widgetRepresentation().setEditedNode(slicer.util.getNode("vtkMRMLSliceNodeRed"))
-    self.logic.resetSliderWidget(self.ui.positionIndexSliderWidget)
+    self.resetSliderWidget(self.ui.positionIndexSliderWidget)
 
     # Connections
     self.ui.inputSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.onSelectNode)
@@ -83,36 +83,47 @@ class PathReformatWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     
   def onSelectNode(self):
     inputPath = self.ui.inputSelector.currentNode()
-    self.logic.inputPath = inputPath
-    # May be no longer needed since slice view is positioned at 0
-    self.logic.resetSliceNodeOrientationToDefault()
-    self.logic.fillPathArray()
-    self.logic.setSliderWidget(self.ui.positionIndexSliderWidget)
+    self.logic.selectNode(inputPath)
+    self.setSliderWidget()
     if inputPath is not None:
         self.ui.hideCheckBox.setChecked(not inputPath.GetDisplayVisibility())
     # Position slice view at first point
     self.logic.process(0)
     
   def onRadioRed(self):
-    sliceNodeName = "vtkMRMLSliceNodeRed"
-    self.logic.set2DView(sliceNodeName)
-    slicer.modules.reformat.widgetRepresentation().setEditedNode(slicer.util.getNode(sliceNodeName))
+    self.logic.selectView("vtkMRMLSliceNodeRed")
     
   def onRadioGreen(self):
-    sliceNodeName = "vtkMRMLSliceNodeGreen"
-    self.logic.set2DView("vtkMRMLSliceNodeGreen")
-    slicer.modules.reformat.widgetRepresentation().setEditedNode(slicer.util.getNode(sliceNodeName))
+    self.logic.selectView("vtkMRMLSliceNodeGreen")
     
   def onRadioYellow(self):
-    sliceNodeName = "vtkMRMLSliceNodeYellow"
-    self.logic.set2DView("vtkMRMLSliceNodeYellow")
-    slicer.modules.reformat.widgetRepresentation().setEditedNode(slicer.util.getNode(sliceNodeName))
+    self.logic.selectView("vtkMRMLSliceNodeYellow")
     
   def onHidePath(self):
     path = self.ui.inputSelector.currentNode()
     if path is None:
         return
     path.SetDisplayVisibility(not self.ui.hideCheckBox.checked)
+    
+  def resetSliderWidget(self, sliderWidget):
+    sliderWidget = self.ui.positionIndexSliderWidget
+    sliderWidget.setDisabled(True)
+    sliderWidget.minimum = 0
+    sliderWidget.maximum = 0
+    sliderWidget.setValue(0)
+    sliderWidget.singleStep = 1
+    sliderWidget.decimals = 0
+    
+  def setSliderWidget(self):
+    inputPath = self.ui.inputSelector.currentNode()
+    sliderWidget = self.ui.positionIndexSliderWidget
+    if inputPath is None:
+        self.resetSliderWidget(sliderWidget)
+        return
+    sliderWidget.setDisabled(False)
+    sliderWidget.minimum = 0
+    sliderWidget.maximum = (self.logic.pathArray.size / 3) - 1 - 1
+    sliderWidget.setValue(0)
 #
 # PathReformatLogic
 #
@@ -131,32 +142,11 @@ class PathReformatLogic(ScriptedLoadableModuleLogic):
     """
     Called when the logic class is instantiated. Can be used for initializing member variables.
     """
-    #self.inputSliceNode = None
     self.inputPath = None
     self.inputSliceNode = slicer.util.getNode("vtkMRMLSliceNodeRed")
     self.reformatLogic = slicer.modules.reformat.logic()
     self.pathArray = numpy.zeros(0)
     # self.backgroundVolumeNode = slicer.app.layoutManager().sliceWidget(self.inputSliceNode.GetName()).sliceLogic().GetBackgroundLayer().GetVolumeNode()
-  
-  def set2DView(self, sliceNodeName):
-      self.inputSliceNode = slicer.util.getNode(sliceNodeName)
-  
-  def resetSliderWidget(self, sliderWidget):
-    sliderWidget.setDisabled(True)
-    sliderWidget.minimum = 0
-    sliderWidget.maximum = 0
-    sliderWidget.setValue(0)
-    sliderWidget.singleStep = 1
-    sliderWidget.decimals = 0
-    
-  def setSliderWidget(self, sliderWidget):
-    if self.inputPath is None:
-        self.resetSliderWidget(sliderWidget)
-        return
-    sliderWidget.setDisabled(False)
-    sliderWidget.minimum = 0
-    sliderWidget.maximum = (self.pathArray.size / 3) - 1 - 1
-    sliderWidget.setValue(0)
   
   def resetSliceNodeOrientationToDefault(self):
     if self.inputPath is None:
@@ -180,6 +170,15 @@ class PathReformatLogic(ScriptedLoadableModuleLogic):
     direction = self.pathArray[int(value) + 1] - point
     self.reformatLogic.SetSliceOrigin(self.inputSliceNode, point[0], point[1], point[2])
     self.reformatLogic.SetSliceNormal(self.inputSliceNode, direction[0], direction[1], direction[2])
+
+  def selectNode(self, inputPath):
+    self.inputPath = inputPath
+    self.resetSliceNodeOrientationToDefault()
+    self.fillPathArray()
+    
+  def selectView(self, sliceMRMLNodeName):
+    self.inputSliceNode = slicer.util.getNode(sliceMRMLNodeName)
+    slicer.modules.reformat.widgetRepresentation().setEditedNode(slicer.util.getNode(sliceMRMLNodeName))
 
 #
 # PathReformatTest
