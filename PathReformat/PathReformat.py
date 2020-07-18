@@ -81,6 +81,9 @@ class PathReformatWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self.ui.yellowRadioButton.connect("clicked()", self.onRadioYellow)
     self.ui.hideCheckBox.connect("clicked()", self.onHidePath)
     
+  def cleanup(self):
+    self.logic.removeMarkupObservers()
+      
   def onSelectNode(self):
     inputPath = self.ui.inputSelector.currentNode()
     self.logic.selectNode(inputPath)
@@ -88,6 +91,7 @@ class PathReformatWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     if inputPath is not None:
         self.ui.hideCheckBox.setChecked(not inputPath.GetDisplayVisibility())
     # Position slice view at first point
+    self.ui.positionIndexSliderWidget.setValue(0)
     self.logic.process(0)
     
   def onRadioRed(self):
@@ -123,7 +127,7 @@ class PathReformatWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     sliderWidget.setDisabled(False)
     sliderWidget.minimum = 0
     sliderWidget.maximum = (self.logic.pathArray.size / 3) - 1 - 1
-    sliderWidget.setValue(0)
+    
 #
 # PathReformatLogic
 #
@@ -146,6 +150,9 @@ class PathReformatLogic(ScriptedLoadableModuleLogic):
     self.inputSliceNode = slicer.util.getNode("vtkMRMLSliceNodeRed")
     self.reformatLogic = slicer.modules.reformat.logic()
     self.pathArray = numpy.zeros(0)
+    self.markupPointObserver = None
+    # on markup change, reprocess last point
+    self.lastValue = 0
     # self.backgroundVolumeNode = slicer.app.layoutManager().sliceWidget(self.inputSliceNode.GetName()).sliceLogic().GetBackgroundLayer().GetVolumeNode()
   
   def resetSliceNodeOrientationToDefault(self):
@@ -170,16 +177,31 @@ class PathReformatLogic(ScriptedLoadableModuleLogic):
     direction = self.pathArray[int(value) + 1] - point
     self.reformatLogic.SetSliceOrigin(self.inputSliceNode, point[0], point[1], point[2])
     self.reformatLogic.SetSliceNormal(self.inputSliceNode, direction[0], direction[1], direction[2])
+    self.lastValue = value
 
   def selectNode(self, inputPath):
+    # Observe the selected markup path only. Remove from previous.
+    self.removeMarkupObservers()
     self.inputPath = inputPath
     self.resetSliceNodeOrientationToDefault()
     self.fillPathArray()
+    # Observe path
+    if inputPath is not None and inputPath.GetClassName() == "vtkMRMLMarkupsCurveNode":
+        self.markupPointObserver = inputPath.AddObserver(slicer.vtkMRMLMarkupsNode.PointEndInteractionEvent, self.onMarkupPointEndInteraction)
     
   def selectView(self, sliceMRMLNodeName):
     self.inputSliceNode = slicer.util.getNode(sliceMRMLNodeName)
     slicer.modules.reformat.widgetRepresentation().setEditedNode(slicer.util.getNode(sliceMRMLNodeName))
-
+    
+  def removeMarkupObservers(self):
+    if self.inputPath is not None:
+        self.inputPath.RemoveObserver(self.markupPointObserver)
+        
+  # Reposition slice if adjacent markup control point is moved
+  def onMarkupPointEndInteraction(self, caller, event):
+    self.fillPathArray()
+    self.process(self.lastValue)
+  
 #
 # PathReformatTest
 #
@@ -195,5 +217,3 @@ class PathReformatTest(ScriptedLoadableModuleTest):
     """ Do whatever is needed to reset the state - typically a scene clear will be enough.
     """
     slicer.mrmlScene.Clear()
-
-
