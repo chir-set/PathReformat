@@ -52,6 +52,8 @@ class PathReformatWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self.widgetMarkupPointObserver = None
     self.widgetMarkupPointAddedObserver = None
     self.widgetMarkupPointRemovedObserver = None
+    # Remove observers on previous path when currrent node has changed
+    self.previousPath = None
 
   def setup(self):
     """
@@ -80,6 +82,8 @@ class PathReformatWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     # Connections
     self.ui.inputSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.onSelectNode)
     self.ui.positionIndexSliderWidget.connect("valueChanged(double)", self.logic.process)
+    # Feedback on module UI
+    self.ui.positionIndexSliderWidget.connect("valueChanged(double)", self.showCurrentPosition)
     self.ui.redRadioButton.connect("clicked()", self.onRadioRed)
     self.ui.greenRadioButton.connect("clicked()", self.onRadioGreen)
     self.ui.yellowRadioButton.connect("clicked()", self.onRadioYellow)
@@ -87,9 +91,10 @@ class PathReformatWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     
   def cleanup(self):
     self.logic.removeMarkupObservers()
-    self.removeWidgetMarkupObservers()
+    self.removeWidgetMarkupObservers(self.ui.inputSelector.currentNode())
       
   def onSelectNode(self):
+    self.removeWidgetMarkupObservers(self.previousPath)
     inputPath = self.ui.inputSelector.currentNode()
     self.logic.selectNode(inputPath)
     self.setSliderWidget()
@@ -98,7 +103,9 @@ class PathReformatWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     # Position slice view at first point
     self.ui.positionIndexSliderWidget.setValue(0)
     self.logic.process(0)
+    self.showCurrentPosition(0)
     self.addWidgetMarkupObservers()
+    self.previousPath = inputPath
     
   def onRadioRed(self):
     self.logic.selectView("vtkMRMLSliceNodeRed")
@@ -141,14 +148,15 @@ class PathReformatWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
   def onWidgetMarkupPointAdded(self, caller, event):
     self.setSliderWidget()
     self.ui.positionIndexSliderWidget.setValue(0)
+    self.showCurrentPosition(0)
 
   def onWidgetMarkupPointRemoved(self, caller, event):
     self.setSliderWidget()
     self.ui.positionIndexSliderWidget.setValue(0)
+    self.showCurrentPosition(0)
     
   def onWidgetMarkupPointEndInteraction(self, caller, event):
-      """
-      """
+    self.showCurrentPosition(self.logic.lastValue)
 
   def addWidgetMarkupObservers(self):
       inputPath = self.ui.inputSelector.currentNode()
@@ -157,12 +165,20 @@ class PathReformatWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self.widgetMarkupPointAddedObserver = inputPath.AddObserver(slicer.vtkMRMLMarkupsNode.PointAddedEvent, self.onWidgetMarkupPointAdded)
         self.widgetMarkupPointRemovedObserver = inputPath.AddObserver(slicer.vtkMRMLMarkupsNode.PointRemovedEvent, self.onWidgetMarkupPointRemoved)
         
-  def removeWidgetMarkupObservers(self):
-    inputPath = self.ui.inputSelector.currentNode()
+  def removeWidgetMarkupObservers(self, inputPath):
     if inputPath is not None:
         inputPath.RemoveObserver(self.widgetMarkupPointAddedObserver)
         inputPath.RemoveObserver(self.widgetMarkupPointRemovedObserver)
         inputPath.RemoveObserver(self.widgetMarkupPointObserver)
+        
+  def showCurrentPosition(self, value):
+    currentPoint = self.logic.currentPosition(value);
+    if currentPoint.size == 0:
+        self.ui.locationLabel.setText("")
+        return
+    position = "R " + str(int(currentPoint[0])) + ", " + "A " + str(int(currentPoint[1])) + ", " + "S " + str(int(currentPoint[2]))
+    self.ui.locationLabel.setText(position)
+    
 #
 # PathReformatLogic
 #
@@ -203,7 +219,7 @@ class PathReformatLogic(ScriptedLoadableModuleLogic):
         return
     if self.inputPath.GetClassName() == "vtkMRMLMarkupsCurveNode" or self.inputPath.GetClassName() == "vtkMRMLMarkupsClosedCurveNode":
         # All control points have been deleted except one
-        if self.inputPath.GetNumberOfControlPoints() == 1:
+        if self.inputPath.GetNumberOfControlPoints() < 2:
             self.pathArray = numpy.zeros(0)
             return
         self.pathArray = slicer.util.arrayFromMarkupsCurvePoints(self.inputPath)
@@ -259,6 +275,11 @@ class PathReformatLogic(ScriptedLoadableModuleLogic):
   def onMarkupPointAdded(self, caller, event):
     self.fillPathArray()
     self.process(0)
+    
+  def currentPosition(self, value):
+    if self.pathArray.size == 0:
+        return numpy.zeros(0)
+    return self.pathArray[int(value)]
   
 #
 # PathReformatTest
