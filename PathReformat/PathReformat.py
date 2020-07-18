@@ -151,6 +151,8 @@ class PathReformatLogic(ScriptedLoadableModuleLogic):
     self.reformatLogic = slicer.modules.reformat.logic()
     self.pathArray = numpy.zeros(0)
     self.markupPointObserver = None
+    self.markupPointRemovedObserver = None
+    self.markupPointAddedObserver = None
     # on markup change, reprocess last point
     self.lastValue = 0
     # self.backgroundVolumeNode = slicer.app.layoutManager().sliceWidget(self.inputSliceNode.GetName()).sliceLogic().GetBackgroundLayer().GetVolumeNode()
@@ -188,6 +190,8 @@ class PathReformatLogic(ScriptedLoadableModuleLogic):
     # Observe path
     if inputPath is not None and inputPath.GetClassName() == "vtkMRMLMarkupsCurveNode":
         self.markupPointObserver = inputPath.AddObserver(slicer.vtkMRMLMarkupsNode.PointEndInteractionEvent, self.onMarkupPointEndInteraction)
+        self.markupPointRemovedObserver = inputPath.AddObserver(slicer.vtkMRMLMarkupsNode.PointRemovedEvent, self.onMarkupPointRemoved)
+        self.markupPointAddedObserver = inputPath.AddObserver(slicer.vtkMRMLMarkupsNode.PointAddedEvent, self.onMarkupPointAdded)
     
   def selectView(self, sliceMRMLNodeName):
     self.inputSliceNode = slicer.util.getNode(sliceMRMLNodeName)
@@ -196,11 +200,23 @@ class PathReformatLogic(ScriptedLoadableModuleLogic):
   def removeMarkupObservers(self):
     if self.inputPath is not None:
         self.inputPath.RemoveObserver(self.markupPointObserver)
+        self.inputPath.RemoveObserver(self.markupPointRemovedObserver)
+        self.inputPath.RemoveObserver(self.markupPointAddedObserver)
         
   # Reposition slice if adjacent markup control point is moved
   def onMarkupPointEndInteraction(self, caller, event):
     self.fillPathArray()
     self.process(self.lastValue)
+    
+  # Reposition slice to start if a markup control point is removed
+  def onMarkupPointRemoved(self, caller, event):
+    self.fillPathArray()
+    self.process(0)
+
+  # Reposition slice to start if a markup control point is added
+  def onMarkupPointAdded(self, caller, event):
+    self.fillPathArray()
+    self.process(0)
   
 #
 # PathReformatTest
