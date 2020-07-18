@@ -48,6 +48,10 @@ class PathReformatWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     ScriptedLoadableModuleWidget.__init__(self, parent)
     VTKObservationMixin.__init__(self)  # needed for parameter node observation
     self.logic = None
+    # Widget level observers to update module UI. Logic class has its own.
+    self.widgetMarkupPointObserver = None
+    self.widgetMarkupPointAddedObserver = None
+    self.widgetMarkupPointRemovedObserver = None
 
   def setup(self):
     """
@@ -71,7 +75,7 @@ class PathReformatWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self.logic = PathReformatLogic()
 
     slicer.modules.reformat.widgetRepresentation().setEditedNode(slicer.util.getNode("vtkMRMLSliceNodeRed"))
-    self.resetSliderWidget(self.ui.positionIndexSliderWidget)
+    self.resetSliderWidget()
 
     # Connections
     self.ui.inputSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.onSelectNode)
@@ -83,6 +87,7 @@ class PathReformatWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     
   def cleanup(self):
     self.logic.removeMarkupObservers()
+    self.removeWidgetMarkupObservers()
       
   def onSelectNode(self):
     inputPath = self.ui.inputSelector.currentNode()
@@ -93,6 +98,7 @@ class PathReformatWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     # Position slice view at first point
     self.ui.positionIndexSliderWidget.setValue(0)
     self.logic.process(0)
+    self.addWidgetMarkupObservers()
     
   def onRadioRed(self):
     self.logic.selectView("vtkMRMLSliceNodeRed")
@@ -109,7 +115,7 @@ class PathReformatWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         return
     path.SetDisplayVisibility(not self.ui.hideCheckBox.checked)
     
-  def resetSliderWidget(self, sliderWidget):
+  def resetSliderWidget(self):
     sliderWidget = self.ui.positionIndexSliderWidget
     sliderWidget.setDisabled(True)
     sliderWidget.minimum = 0
@@ -122,12 +128,41 @@ class PathReformatWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     inputPath = self.ui.inputSelector.currentNode()
     sliderWidget = self.ui.positionIndexSliderWidget
     if inputPath is None:
-        self.resetSliderWidget(sliderWidget)
+        self.resetSliderWidget()
         return
     sliderWidget.setDisabled(False)
     sliderWidget.minimum = 0
-    sliderWidget.maximum = (self.logic.pathArray.size / 3) - 1 - 1
+    sliderWidget.maximum = 0
+    # if control points are deleted one by one
+    if self.logic.pathArray.size > 1:
+        sliderWidget.maximum = (self.logic.pathArray.size / 3) - 1 - 1
     
+  # logic.onWidgetMarkupPointAdded gets called first
+  def onWidgetMarkupPointAdded(self, caller, event):
+    self.setSliderWidget()
+    self.ui.positionIndexSliderWidget.setValue(0)
+
+  def onWidgetMarkupPointRemoved(self, caller, event):
+    self.setSliderWidget()
+    self.ui.positionIndexSliderWidget.setValue(0)
+    
+  def onWidgetMarkupPointEndInteraction(self, caller, event):
+      """
+      """
+
+  def addWidgetMarkupObservers(self):
+      inputPath = self.ui.inputSelector.currentNode()
+      if inputPath is not None and inputPath.GetClassName() == "vtkMRMLMarkupsCurveNode":
+        self.widgetMarkupPointObserver = inputPath.AddObserver(slicer.vtkMRMLMarkupsNode.PointEndInteractionEvent, self.onWidgetMarkupPointEndInteraction)
+        self.widgetMarkupPointAddedObserver = inputPath.AddObserver(slicer.vtkMRMLMarkupsNode.PointAddedEvent, self.onWidgetMarkupPointAdded)
+        self.widgetMarkupPointRemovedObserver = inputPath.AddObserver(slicer.vtkMRMLMarkupsNode.PointRemovedEvent, self.onWidgetMarkupPointRemoved)
+        
+  def removeWidgetMarkupObservers(self):
+    inputPath = self.ui.inputSelector.currentNode()
+    if inputPath is not None:
+        inputPath.RemoveObserver(self.widgetMarkupPointAddedObserver)
+        inputPath.RemoveObserver(self.widgetMarkupPointRemovedObserver)
+        inputPath.RemoveObserver(self.widgetMarkupPointObserver)
 #
 # PathReformatLogic
 #
@@ -167,13 +202,17 @@ class PathReformatLogic(ScriptedLoadableModuleLogic):
         self.pathArray = numpy.zeros(0)
         return
     if self.inputPath.GetClassName() == "vtkMRMLMarkupsCurveNode" or self.inputPath.GetClassName() == "vtkMRMLMarkupsClosedCurveNode":
+        # All control points have been deleted except one
+        if self.inputPath.GetNumberOfControlPoints() == 1:
+            self.pathArray = numpy.zeros(0)
+            return
         self.pathArray = slicer.util.arrayFromMarkupsCurvePoints(self.inputPath)
         
     if self.inputPath.GetClassName() == "vtkMRMLModelNode":
         self.pathArray = slicer.util.arrayFromModelPoints(self.inputPath)
 
   def process(self, value):
-    if self.inputSliceNode is None or self.inputPath is None:
+    if self.inputSliceNode is None or self.inputPath is None or (self.pathArray.size == 0):
         return
     point = self.pathArray[int(value)]
     direction = self.pathArray[int(value) + 1] - point
@@ -187,16 +226,19 @@ class PathReformatLogic(ScriptedLoadableModuleLogic):
     self.inputPath = inputPath
     self.resetSliceNodeOrientationToDefault()
     self.fillPathArray()
-    # Observe path
-    if inputPath is not None and inputPath.GetClassName() == "vtkMRMLMarkupsCurveNode":
-        self.markupPointObserver = inputPath.AddObserver(slicer.vtkMRMLMarkupsNode.PointEndInteractionEvent, self.onMarkupPointEndInteraction)
-        self.markupPointRemovedObserver = inputPath.AddObserver(slicer.vtkMRMLMarkupsNode.PointRemovedEvent, self.onMarkupPointRemoved)
-        self.markupPointAddedObserver = inputPath.AddObserver(slicer.vtkMRMLMarkupsNode.PointAddedEvent, self.onMarkupPointAdded)
+    self.addMarkupObservers()
     
   def selectView(self, sliceMRMLNodeName):
     self.inputSliceNode = slicer.util.getNode(sliceMRMLNodeName)
     slicer.modules.reformat.widgetRepresentation().setEditedNode(slicer.util.getNode(sliceMRMLNodeName))
     
+  def addMarkupObservers(self):
+    # Observe markup curve. VMTK centerlines don't seem to have UI handles.
+    if self.inputPath is not None and self.inputPath.GetClassName() == "vtkMRMLMarkupsCurveNode":
+        self.markupPointObserver = self.inputPath.AddObserver(slicer.vtkMRMLMarkupsNode.PointEndInteractionEvent, self.onMarkupPointEndInteraction)
+        self.markupPointRemovedObserver = self.inputPath.AddObserver(slicer.vtkMRMLMarkupsNode.PointRemovedEvent, self.onMarkupPointRemoved)
+        self.markupPointAddedObserver = self.inputPath.AddObserver(slicer.vtkMRMLMarkupsNode.PointAddedEvent, self.onMarkupPointAdded)
+        
   def removeMarkupObservers(self):
     if self.inputPath is not None:
         self.inputPath.RemoveObserver(self.markupPointObserver)
