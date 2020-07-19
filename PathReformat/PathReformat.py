@@ -83,7 +83,7 @@ class PathReformatWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self.ui.inputSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.onSelectNode)
     self.ui.positionIndexSliderWidget.connect("valueChanged(double)", self.logic.process)
     # Feedback on module UI
-    self.ui.positionIndexSliderWidget.connect("valueChanged(double)", self.showCurrentPosition)
+    self.ui.positionIndexSliderWidget.connect("valueChanged(double)", self.showCurrentPositionData)
     self.ui.redRadioButton.connect("clicked()", self.onRadioRed)
     self.ui.greenRadioButton.connect("clicked()", self.onRadioGreen)
     self.ui.yellowRadioButton.connect("clicked()", self.onRadioYellow)
@@ -103,7 +103,7 @@ class PathReformatWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     # Position slice view at first point
     self.ui.positionIndexSliderWidget.setValue(0)
     self.logic.process(0)
-    self.showCurrentPosition(0)
+    self.showCurrentPositionData(0)
     self.addWidgetMarkupObservers()
     self.previousPath = inputPath
     
@@ -148,15 +148,15 @@ class PathReformatWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
   def onWidgetMarkupPointAdded(self, caller, event):
     self.setSliderWidget()
     self.ui.positionIndexSliderWidget.setValue(0)
-    self.showCurrentPosition(0)
+    self.showCurrentPositionData(0)
 
   def onWidgetMarkupPointRemoved(self, caller, event):
     self.setSliderWidget()
     self.ui.positionIndexSliderWidget.setValue(0)
-    self.showCurrentPosition(0)
+    self.showCurrentPositionData(0)
     
   def onWidgetMarkupPointEndInteraction(self, caller, event):
-    self.showCurrentPosition(self.logic.lastValue)
+    self.showCurrentPositionData(self.logic.lastValue)
 
   def addWidgetMarkupObservers(self):
       inputPath = self.ui.inputSelector.currentNode()
@@ -171,13 +171,23 @@ class PathReformatWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         inputPath.RemoveObserver(self.widgetMarkupPointRemovedObserver)
         inputPath.RemoveObserver(self.widgetMarkupPointObserver)
         
-  def showCurrentPosition(self, value):
+  def showCurrentPositionData(self, value):
+      # Get coordinates on path
     currentPoint = self.logic.currentPosition(value);
     if currentPoint.size == 0:
         self.ui.locationLabel.setText("")
+        self.ui.distanceLabel.setText("")
+        self.ui.lengthLabel.setText("")
         return
     position = "R " + str(int(currentPoint[0])) + ", " + "A " + str(int(currentPoint[1])) + ", " + "S " + str(int(currentPoint[2]))
     self.ui.locationLabel.setText(position)
+    # Get path length
+    sizeOfArray = int(self.logic.cumDistancesArray.size)
+    length = str(round(self.logic.cumDistancesArray[sizeOfArray - 1], 1))
+    self.ui.lengthLabel.setText(length + " mm")
+    # Distance from start
+    distance = str(round(self.logic.cumDistancesArray[int(value)], 1))
+    self.ui.distanceLabel.setText(distance + " mm")
     
 #
 # PathReformatLogic
@@ -206,6 +216,7 @@ class PathReformatLogic(ScriptedLoadableModuleLogic):
     self.markupPointAddedObserver = None
     # on markup change, reprocess last point
     self.lastValue = 0
+    self.cumDistancesArray = numpy.zeros(0)
     # self.backgroundVolumeNode = slicer.app.layoutManager().sliceWidget(self.inputSliceNode.GetName()).sliceLogic().GetBackgroundLayer().GetVolumeNode()
   
   def resetSliceNodeOrientationToDefault(self):
@@ -216,16 +227,19 @@ class PathReformatLogic(ScriptedLoadableModuleLogic):
   def fillPathArray(self):
     if self.inputPath is None or self.inputSliceNode is None:
         self.pathArray = numpy.zeros(0)
+        self.cumDistancesArray = numpy.zeros(0)
         return
     if self.inputPath.GetClassName() == "vtkMRMLMarkupsCurveNode" or self.inputPath.GetClassName() == "vtkMRMLMarkupsClosedCurveNode":
         # All control points have been deleted except one
         if self.inputPath.GetNumberOfControlPoints() < 2:
             self.pathArray = numpy.zeros(0)
+            self.cumDistancesArray = numpy.zeros(0)
             return
         self.pathArray = slicer.util.arrayFromMarkupsCurvePoints(self.inputPath)
-        
     if self.inputPath.GetClassName() == "vtkMRMLModelNode":
         self.pathArray = slicer.util.arrayFromModelPoints(self.inputPath)
+        
+    self.cumulateDistances()
 
   def process(self, value):
     if self.inputSliceNode is None or self.inputPath is None or (self.pathArray.size == 0):
@@ -281,6 +295,16 @@ class PathReformatLogic(ScriptedLoadableModuleLogic):
         return numpy.zeros(0)
     return self.pathArray[int(value)]
   
+  def cumulateDistances(self):
+    self.cumDistancesArray = numpy.zeros(int(self.pathArray.size / 3))
+    previous = self.pathArray[0]
+    dist = 0
+    for i, point in enumerate(self.pathArray):
+      # https://stackoverflow.com/questions/1401712/how-can-the-euclidean-distance-be-calculated-with-numpy
+      dist += numpy.linalg.norm(point - previous)
+      self.cumDistancesArray[i] = dist
+      previous = point
+      
 #
 # PathReformatTest
 #
