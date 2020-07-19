@@ -75,6 +75,9 @@ class PathReformatWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     # Create logic class. Logic implements all computations that should be possible to run
     # in batch mode, without a graphical user interface.
     self.logic = PathReformatLogic()
+    
+    # Hide diameter labels. Concern only VMTK centerline models.
+    self.showDiameterLabels(False)
 
     slicer.modules.reformat.widgetRepresentation().setEditedNode(slicer.util.getNode("vtkMRMLSliceNodeRed"))
     self.resetSliderWidget()
@@ -106,6 +109,10 @@ class PathReformatWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self.showCurrentPositionData(0)
     self.addWidgetMarkupObservers()
     self.previousPath = inputPath
+    if inputPath is not None and inputPath.GetClassName() == "vtkMRMLModelNode":
+        self.showDiameterLabels(True)
+    else:
+        self.showDiameterLabels(False)
     
   def onRadioRed(self):
     self.logic.selectView("vtkMRMLSliceNodeRed")
@@ -188,7 +195,15 @@ class PathReformatWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     # Distance from start
     distance = str(round(self.logic.cumDistancesArray[int(value)], 1))
     self.ui.distanceLabel.setText(distance + " mm")
+    # VMTK centerline radius
+    inputPath = self.ui.inputSelector.currentNode()
+    if inputPath is not None and inputPath.GetClassName() == "vtkMRMLModelNode" and self.logic.vmtkCenterlineRadii.size > 0:
+        diameter = str(round(self.logic.vmtkCenterlineRadii[int(value)] * 2, 1))
+        self.ui.diameterLabel.setText(diameter + " mm")
     
+  def showDiameterLabels(self, show):
+    self.ui.diameterLabelIndicator.setVisible(show)
+    self.ui.diameterLabel.setVisible(show)
 #
 # PathReformatLogic
 #
@@ -217,6 +232,7 @@ class PathReformatLogic(ScriptedLoadableModuleLogic):
     # on markup change, reprocess last point
     self.lastValue = 0
     self.cumDistancesArray = numpy.zeros(0)
+    self.vmtkCenterlineRadii = numpy.zeros(0)
     # self.backgroundVolumeNode = slicer.app.layoutManager().sliceWidget(self.inputSliceNode.GetName()).sliceLogic().GetBackgroundLayer().GetVolumeNode()
   
   def resetSliceNodeOrientationToDefault(self):
@@ -228,8 +244,10 @@ class PathReformatLogic(ScriptedLoadableModuleLogic):
     if self.inputPath is None or self.inputSliceNode is None:
         self.pathArray = numpy.zeros(0)
         self.cumDistancesArray = numpy.zeros(0)
+        self.vmtkCenterlineRadii = numpy.zeros(0)
         return
     if self.inputPath.GetClassName() == "vtkMRMLMarkupsCurveNode" or self.inputPath.GetClassName() == "vtkMRMLMarkupsClosedCurveNode":
+        self.vmtkCenterlineRadii = numpy.zeros(0)
         # All control points have been deleted except one
         if self.inputPath.GetNumberOfControlPoints() < 2:
             self.pathArray = numpy.zeros(0)
@@ -238,6 +256,7 @@ class PathReformatLogic(ScriptedLoadableModuleLogic):
         self.pathArray = slicer.util.arrayFromMarkupsCurvePoints(self.inputPath)
     if self.inputPath.GetClassName() == "vtkMRMLModelNode":
         self.pathArray = slicer.util.arrayFromModelPoints(self.inputPath)
+        self.vmtkCenterlineRadii = slicer.util.arrayFromModelPointData(self.inputPath, 'Radius')
         
     self.cumulateDistances()
 
