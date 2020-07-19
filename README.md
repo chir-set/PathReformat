@@ -2,11 +2,15 @@
 
 This [Slicer](https://www.slicer.org/) module uses the Reformat module to move a selected 2D view along a path, and to incline the plane at right angle to the path. It is intended to view cross-sections of blood vessels.
 
+The view's position and orientation are dynamically reported.
+
 **Usage**
 
 Select a markup curve or a VMTK centerline model, and a 2D view.
 
 Move the slider bar to reformat the view.
+
+![Texte alternatif](Screenshot_0.png)
 
 **Comments**
 
@@ -18,6 +22,11 @@ The curve markup can be a computed result, like those of [VMTK](https://github.c
 
 The Reformat widget can be optionally displayed in the 3D view.
 
+For VMTK centerline models only, the diameter at the location on the path is also shown.
+
 *N.B : do not confuse VMTK centerline markups and models.*
 
+**Disclaimer**
+
+Use at your own risks.
 

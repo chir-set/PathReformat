@@ -78,7 +78,8 @@ class PathReformatWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     
     # Hide diameter labels. Concern only VMTK centerline models.
     self.showDiameterLabels(False)
-
+    
+    self.ui.moreCollapsibleButton.collapsed = True
     slicer.modules.reformat.widgetRepresentation().setEditedNode(slicer.util.getNode("vtkMRMLSliceNodeRed"))
     self.resetSliderWidget()
 
@@ -107,8 +108,10 @@ class PathReformatWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self.ui.positionIndexSliderWidget.setValue(0)
     self.logic.process(0)
     self.showCurrentPositionData(0)
+    # Remember this path to remove observers later
     self.addWidgetMarkupObservers()
     self.previousPath = inputPath
+    # Diameters can be shown for VMTK centerline models only
     if inputPath is not None and inputPath.GetClassName() == "vtkMRMLModelNode":
         self.showDiameterLabels(True)
     else:
@@ -161,7 +164,8 @@ class PathReformatWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self.setSliderWidget()
     self.ui.positionIndexSliderWidget.setValue(0)
     self.showCurrentPositionData(0)
-    
+  
+  # Position on path is not reset here
   def onWidgetMarkupPointEndInteraction(self, caller, event):
     self.showCurrentPositionData(self.logic.lastValue)
 
@@ -179,7 +183,7 @@ class PathReformatWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         inputPath.RemoveObserver(self.widgetMarkupPointObserver)
         
   def showCurrentPositionData(self, value):
-      # Get coordinates on path
+    # Get coordinates on path
     currentPoint = self.logic.currentPosition(value);
     if currentPoint.size == 0:
         self.ui.locationLabel.setText("")
@@ -206,7 +210,8 @@ class PathReformatWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     orientation += "y " + str(round(orient[1], 1)) + "°,"
     orientation += "z " + str(round(orient[2], 1)) + "°"
     self.ui.orientationLabel.setText(orientation)
-    
+
+  # True : for VMTK centerline models only
   def showDiameterLabels(self, show):
     self.ui.diameterLabelIndicator.setVisible(show)
     self.ui.diameterLabel.setVisible(show)
@@ -232,6 +237,7 @@ class PathReformatLogic(ScriptedLoadableModuleLogic):
     self.inputSliceNode = slicer.util.getNode("vtkMRMLSliceNodeRed")
     self.reformatLogic = slicer.modules.reformat.logic()
     self.pathArray = numpy.zeros(0)
+    # Use independent observers to reprocess the slice when a markup curve is modified
     self.markupPointObserver = None
     self.markupPointRemovedObserver = None
     self.markupPointAddedObserver = None
@@ -245,7 +251,8 @@ class PathReformatLogic(ScriptedLoadableModuleLogic):
     if self.inputPath is None:
         return
     slicer.app.layoutManager().sliceWidget(self.inputSliceNode.GetName()).mrmlSliceNode().SetOrientationToDefault()
-    
+
+  # Get the path's array of points
   def fillPathArray(self):
     if self.inputPath is None or self.inputSliceNode is None:
         self.pathArray = numpy.zeros(0)
@@ -260,12 +267,14 @@ class PathReformatLogic(ScriptedLoadableModuleLogic):
             self.cumDistancesArray = numpy.zeros(0)
             return
         self.pathArray = slicer.util.arrayFromMarkupsCurvePoints(self.inputPath)
+    # For VMTK centerline models, get the array of radii
     if self.inputPath.GetClassName() == "vtkMRMLModelNode":
         self.pathArray = slicer.util.arrayFromModelPoints(self.inputPath)
         self.vmtkCenterlineRadii = slicer.util.arrayFromModelPointData(self.inputPath, 'Radius')
-        
+    # Compute the distances for each point once
     self.cumulateDistances()
 
+  # Move the reformated slice along path, and point it to the next point
   def process(self, value):
     if self.inputSliceNode is None or self.inputPath is None or (self.pathArray.size == 0):
         return
@@ -300,26 +309,28 @@ class PathReformatLogic(ScriptedLoadableModuleLogic):
         self.inputPath.RemoveObserver(self.markupPointRemovedObserver)
         self.inputPath.RemoveObserver(self.markupPointAddedObserver)
         
-  # Reposition slice if adjacent markup control point is moved
+  # Reposition the slice if a markup control point is moved
   def onMarkupPointEndInteraction(self, caller, event):
     self.fillPathArray()
     self.process(self.lastValue)
     
-  # Reposition slice to start if a markup control point is removed
+  # Reposition the slice to start if a markup control point is removed
   def onMarkupPointRemoved(self, caller, event):
     self.fillPathArray()
     self.process(0)
 
-  # Reposition slice to start if a markup control point is added
+  # Reposition the slice to start if a markup control point is added
   def onMarkupPointAdded(self, caller, event):
     self.fillPathArray()
     self.process(0)
     
+  # Get RAS current position on path
   def currentPosition(self, value):
     if self.pathArray.size == 0:
         return numpy.zeros(0)
     return self.pathArray[int(value)]
   
+  # Calculate distance of each point from start of path
   def cumulateDistances(self):
     self.cumDistancesArray = numpy.zeros(int(self.pathArray.size / 3))
     previous = self.pathArray[0]
@@ -329,7 +340,8 @@ class PathReformatLogic(ScriptedLoadableModuleLogic):
       dist += numpy.linalg.norm(point - previous)
       self.cumDistancesArray[i] = dist
       previous = point
-      
+
+  # Why ?
   def getSliceOrientation(self):
     sliceToRAS = self.inputSliceNode.GetSliceToRAS()
     orient = numpy.zeros(3)
