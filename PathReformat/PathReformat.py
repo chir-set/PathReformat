@@ -200,6 +200,12 @@ class PathReformatWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     if inputPath is not None and inputPath.GetClassName() == "vtkMRMLModelNode" and self.logic.vmtkCenterlineRadii.size > 0:
         diameter = str(round(self.logic.vmtkCenterlineRadii[int(value)] * 2, 1))
         self.ui.diameterLabel.setText(diameter + " mm")
+    # Orientation
+    orient = self.logic.getSliceOrientation()
+    orientation = "x " + str(round(orient[0], 1)) + "°,"
+    orientation += "y " + str(round(orient[1], 1)) + "°,"
+    orientation += "z " + str(round(orient[2], 1)) + "°"
+    self.ui.orientationLabel.setText(orientation)
     
   def showDiameterLabels(self, show):
     self.ui.diameterLabelIndicator.setVisible(show)
@@ -324,6 +330,12 @@ class PathReformatLogic(ScriptedLoadableModuleLogic):
       self.cumDistancesArray[i] = dist
       previous = point
       
+  def getSliceOrientation(self):
+    sliceToRAS = self.inputSliceNode.GetSliceToRAS()
+    orient = numpy.zeros(3)
+    vtk.vtkTransform().GetOrientation(orient, sliceToRAS)
+    return orient
+
 #
 # PathReformatTest
 #
