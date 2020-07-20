@@ -80,6 +80,7 @@ class PathReformatWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self.showDiameterLabels(False)
     
     self.ui.moreCollapsibleButton.collapsed = True
+    self.ui.advancedCollapsibleButton.collapsed = True
     slicer.modules.reformat.widgetRepresentation().setEditedNode(slicer.util.getNode("vtkMRMLSliceNodeRed"))
     self.resetSliderWidget()
 
@@ -92,6 +93,7 @@ class PathReformatWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self.ui.greenRadioButton.connect("clicked()", self.onRadioGreen)
     self.ui.yellowRadioButton.connect("clicked()", self.onRadioYellow)
     self.ui.hideCheckBox.connect("clicked()", self.onHidePath)
+    self.ui.createMarkupsCurvePushButton.connect("clicked()", self.createMarksupCurve)
     
   def cleanup(self):
     self.logic.removeMarkupObservers()
@@ -215,6 +217,11 @@ class PathReformatWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
   def showDiameterLabels(self, show):
     self.ui.diameterLabelIndicator.setVisible(show)
     self.ui.diameterLabel.setVisible(show)
+
+  # Created with the default name
+  def createMarksupCurve(self):
+    self.ui.inputSelector.setCurrentNode(None)
+    slicer.mrmlScene.AddNewNodeByClass("vtkMRMLMarkupsCurveNode")
 #
 # PathReformatLogic
 #
