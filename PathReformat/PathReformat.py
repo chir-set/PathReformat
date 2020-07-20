@@ -113,6 +113,8 @@ class PathReformatWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     # Remember this path to remove observers later
     self.addWidgetMarkupObservers()
     self.previousPath = inputPath
+    # Select in markups module if appropriate
+    self.selectInMarkupsModule()
     # Diameters can be shown for VMTK centerline models only
     if inputPath is not None and inputPath.GetClassName() == "vtkMRMLModelNode":
         self.showDiameterLabels(True)
@@ -222,6 +224,19 @@ class PathReformatWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
   def createMarksupCurve(self):
     self.ui.inputSelector.setCurrentNode(None)
     slicer.mrmlScene.AddNewNodeByClass("vtkMRMLMarkupsCurveNode")
+
+  # Select the path there for future point addition on that path
+  def selectInMarkupsModule(self):
+    inputPath = self.ui.inputSelector.currentNode()
+    markupsWidget = slicer.modules.markups.widgetRepresentation()
+    if inputPath is None:
+        # The markups module keeps selecting the last node ! Future points will be added to that curve.
+        markupsWidget.setEditedNode(None)
+        return
+    if inputPath.GetClassName() != "vtkMRMLModelNode":
+        markupsWidget.setEditedNode(inputPath)
+    else:
+        markupsWidget.setEditedNode(None)
 #
 # PathReformatLogic
 #
