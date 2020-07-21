@@ -193,6 +193,7 @@ class PathReformatWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         self.ui.locationLabel.setText("")
         self.ui.distanceLabel.setText("")
         self.ui.lengthLabel.setText("")
+        self.ui.orientationLabel.setText("")
         return
     position = "R " + str(int(currentPoint[0])) + ", " + "A " + str(int(currentPoint[1])) + ", " + "S " + str(int(currentPoint[2]))
     self.ui.locationLabel.setText(position)
