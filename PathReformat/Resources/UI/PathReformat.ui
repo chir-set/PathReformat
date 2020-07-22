@@ -251,7 +251,7 @@
 Click on the markups curve button in the toolbar to start placing points.</string>
         </property>
         <property name="text">
-         <string>Create marksup curve</string>
+         <string>Create markups curve</string>
         </property>
        </widget>
       </item>
