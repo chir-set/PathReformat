@@ -18,13 +18,21 @@ Visual comfort of the reformated displacement is as smooth as the curve is. Ther
 
 Best result is obtained with curve markups. These can also be resampled to fewer points. [VMTK](https://github.com/vmtk/SlicerExtension-VMTK) centerline models cannot be resampled.
 
-The curve markup can be a computed result, like those of [VMTK](https://github.com/vmtk/SlicerExtension-VMTK) centerline markups. It can also be hand-drawn. The latter approach can  be appropriate for quick reformated visualization of a short segment of sinuous arteries, like the iliacs and subclavians.
+The markup curve can be a computed result, like those of [VMTK](https://github.com/vmtk/SlicerExtension-VMTK) centerline markups. It can also be hand-drawn. The latter approach can  be appropriate for quick reformated visualization of a short segment of sinuous arteries, like the iliacs and subclavians.
 
 The Reformat widget can be optionally displayed in the 3D view.
 
 For VMTK centerline models only, the diameter at the location on the path is also shown.
 
 *N.B : do not confuse VMTK centerline markups and models.*
+
+**Markup curve editing**
+
+The reformatted view is updated upon markup point displacement, addition and deletion.
+
+New markup curves can be created inplace.
+
+Point addition goes to the selected markup curve.
 
 **Disclaimer**
 
