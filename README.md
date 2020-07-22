@@ -16,7 +16,7 @@ Move the slider bar to reformat the view.
 
 Visual comfort of the reformated displacement is as smooth as the curve is. There should not be hundreds of points constituting the path ( point here is not the regularly spaced balls seen on screen).
 
-Best result is obtained with curve markups. These can also be resampled to fewer points. [VMTK](https://github.com/vmtk/SlicerExtension-VMTK) centerline models cannot be resampled.
+Best result is obtained with markup curves. These can also be resampled to fewer points. [VMTK](https://github.com/vmtk/SlicerExtension-VMTK) centerline models cannot be resampled.
 
 The markup curve can be a computed result, like those of [VMTK](https://github.com/vmtk/SlicerExtension-VMTK) centerline markups. It can also be hand-drawn. The latter approach can  be appropriate for quick reformated visualization of a short segment of sinuous arteries, like the iliacs and subclavians.
 
@@ -33,6 +33,12 @@ The reformatted view is updated upon markup point displacement, addition and del
 New markup curves can be created inplace.
 
 Point addition goes to the selected markup curve.
+
+**ROI helper**
+
+As a convenience, an ROI can be created in-place. It is centered on the selected path, and its bounding box is strictly that of the path. It can then be used in other modules like Local Threshold or Crop Volume.
+
+The typical use case is : axial arterial analysis along a manually created markup curve, followed by segment creation within the curve bounds in a huge volume node.
 
 **Disclaimer**
 
