@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>363</width>
-    <height>472</height>
+    <height>704</height>
    </rect>
   </property>
   <property name="locale">
@@ -255,6 +255,74 @@ Click on the markups curve button in the toolbar to start placing points.</strin
         </property>
        </widget>
       </item>
+      <item>
+       <spacer name="horizontalSpacer">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item>
+       <widget class="QGroupBox" name="roiGroupBox">
+        <property name="title">
+         <string/>
+        </property>
+        <layout class="QVBoxLayout" name="verticalLayout_3">
+         <item>
+          <widget class="QLabel" name="label_4">
+           <property name="text">
+            <string>Create a bounding ROI</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="qMRMLNodeComboBox" name="roiSelector">
+           <property name="toolTip">
+            <string>On creation of a new ROI, it is centered on the selected path, and its bounding box is strictly that of the path. The edges may still need to be fine tuned.
+
+If no path is selected, the newly created ROI is removed.
+
+This is a convenience function. The intent is to quickly prepare an ROI with minimal editing, with dimensions and position based on a path. It can then be used in other modules like Local Threshold or Crop Volume.
+</string>
+           </property>
+           <property name="nodeTypes">
+            <stringlist>
+             <string>vtkMRMLAnnotationROINode</string>
+            </stringlist>
+           </property>
+           <property name="noneEnabled">
+            <bool>true</bool>
+           </property>
+           <property name="editEnabled">
+            <bool>false</bool>
+           </property>
+           <property name="renameEnabled">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QCheckBox" name="hideROICheckBox">
+           <property name="toolTip">
+            <string>Hide the selected ROI.
+
+Caution : ROIs not created here may also be hidden.
+</string>
+           </property>
+           <property name="text">
+            <string>Hide ROI</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
      </layout>
     </widget>
    </item>
@@ -318,6 +386,22 @@ Click on the markups curve button in the toolbar to start placing points.</strin
     <hint type="destinationlabel">
      <x>248</x>
      <y>61</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>PathReformat</sender>
+   <signal>mrmlSceneChanged(vtkMRMLScene*)</signal>
+   <receiver>roiSelector</receiver>
+   <slot>setMRMLScene(vtkMRMLScene*)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>181</x>
+     <y>315</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>181</x>
+     <y>564</y>
     </hint>
    </hints>
   </connection>

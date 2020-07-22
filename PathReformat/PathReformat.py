@@ -94,6 +94,9 @@ class PathReformatWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     self.ui.yellowRadioButton.connect("clicked()", self.onRadioYellow)
     self.ui.hideCheckBox.connect("clicked()", self.onHidePath)
     self.ui.createMarkupsCurvePushButton.connect("clicked()", self.createMarksupCurve)
+    self.ui.roiSelector.connect("nodeAddedByUser(vtkMRMLNode*)", self.onCreateROI)
+    self.ui.roiSelector.connect("currentNodeChanged(vtkMRMLNode*)", self.onCurrentROIChanged)
+    self.ui.hideROICheckBox.connect("clicked()", self.onHideROI)
     
   def cleanup(self):
     self.logic.removeMarkupObservers()
@@ -238,6 +241,34 @@ class PathReformatWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         markupsWidget.setEditedNode(inputPath)
     else:
         markupsWidget.setEditedNode(None)
+        
+  def onCreateROI(self):
+    inputPath = self.ui.inputSelector.currentNode()
+    if inputPath is None:
+        slicer.mrmlScene.RemoveNode(self.ui.roiSelector.currentNode())
+        return;
+    bounds = numpy.zeros(6)
+    inputPath.GetRASBounds(bounds)
+    box = vtk.vtkBoundingBox(bounds)
+    center = [0.0, 0.0, 0.0]
+    box.GetCenter(center)
+    roi = self.ui.roiSelector.currentNode()
+    roi.SetName("ROI " + inputPath.GetName())
+    roi.SetXYZ(center)
+    roi.SetRadiusXYZ(box.GetLength(0) / 2, box.GetLength(1) / 2, box.GetLength(2) / 2)
+    
+  def onCurrentROIChanged(self):
+    currentROI = self.ui.roiSelector.currentNode()
+    if currentROI is None:
+        self.ui.hideROICheckBox.setChecked(False)
+        return
+    self.ui.hideROICheckBox.setChecked(not currentROI.GetDisplayVisibility())
+    
+  def onHideROI(self):
+    roi = self.ui.roiSelector.currentNode()
+    if roi is None:
+        return
+    roi.SetDisplayVisibility(not self.ui.hideROICheckBox.checked)
 #
 # PathReformatLogic
 #
