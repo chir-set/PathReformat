@@ -81,6 +81,7 @@ class PathReformatWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
     
     self.ui.moreCollapsibleButton.collapsed = True
     self.ui.advancedCollapsibleButton.collapsed = True
+    self.ui.roiCollapsibleButton.collapsed = True
     slicer.modules.reformat.widgetRepresentation().setEditedNode(slicer.util.getNode("vtkMRMLSliceNodeRed"))
     self.resetSliderWidget()
 

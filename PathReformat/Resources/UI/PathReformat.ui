@@ -269,18 +269,11 @@ Click on the markups curve button in the toolbar to start placing points.</strin
        </spacer>
       </item>
       <item>
-       <widget class="QGroupBox" name="roiGroupBox">
-        <property name="title">
-         <string/>
+       <widget class="qMRMLCollapsibleButton" name="roiCollapsibleButton">
+        <property name="text">
+         <string>Create a bounding ROI</string>
         </property>
-        <layout class="QVBoxLayout" name="verticalLayout_3">
-         <item>
-          <widget class="QLabel" name="label_4">
-           <property name="text">
-            <string>Create a bounding ROI</string>
-           </property>
-          </widget>
-         </item>
+        <layout class="QVBoxLayout" name="verticalLayout_4">
          <item>
           <widget class="qMRMLNodeComboBox" name="roiSelector">
            <property name="toolTip">
