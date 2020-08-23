@@ -1,4 +1,4 @@
-# PathReformat module
+# CrossSectionAnalysis module
 
 This [Slicer](https://www.slicer.org/) module uses the Reformat module to move a selected 2D view along a path, and to incline the plane at right angle to the path. It is intended to view cross-sections of blood vessels.
 
@@ -43,4 +43,9 @@ The typical use case is : axial arterial analysis along a manually created marku
 **Disclaimer**
 
 Use at your own risks.
+
+*Update*
+
+*This module is renamed from PathReformat to CrossSectionAnalysis for inclusion in Slicer's VMTK extension.*
+
 

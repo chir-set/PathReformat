@@ -7,17 +7,19 @@ import numpy
 from slicer.util import VTKObservationMixin
 
 #
+# CrossSectionAnalysis
+# renamed from
 # PathReformat
 #
 
-class PathReformat(ScriptedLoadableModule):
+class CrossSectionAnalysis(ScriptedLoadableModule):
   """Uses ScriptedLoadableModule base class, available at:
   https://github.com/Slicer/Slicer/blob/master/Base/Python/slicer/ScriptedLoadableModule.py
   """
 
   def __init__(self, parent):
     ScriptedLoadableModule.__init__(self, parent)
-    self.parent.title = "Path reformat"  # TODO: make this more human readable by adding spaces
+    self.parent.title = "Cross-section analysis"  # TODO: make this more human readable by adding spaces
     self.parent.categories = ["Utilities"]  # TODO: set categories (folders where the module shows up in the module selector)
     self.parent.dependencies = []  # TODO: add here list of module names that this module requires
     self.parent.contributors = ["SET (Hobbyist)"]  # TODO: replace with "Firstname Lastname (Organization)"
@@ -33,10 +35,10 @@ and Steve Pieper, Isomics, Inc. and was partially funded by NIH grant 3P41RR0132
 """
 
 #
-# PathReformatWidget
+# CrossSectionAnalysisWidget
 #
 
-class PathReformatWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
+class CrossSectionAnalysisWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
   """Uses ScriptedLoadableModuleWidget base class, available at:
   https://github.com/Slicer/Slicer/blob/master/Base/Python/slicer/ScriptedLoadableModule.py
   """
@@ -63,7 +65,7 @@ class PathReformatWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
     # Load widget from .ui file (created by Qt Designer).
     # Additional widgets can be instantiated manually and added to self.layout.
-    uiWidget = slicer.util.loadUI(self.resourcePath('UI/PathReformat.ui'))
+    uiWidget = slicer.util.loadUI(self.resourcePath('UI/CrossSectionAnalysis.ui'))
     self.layout.addWidget(uiWidget)
     self.ui = slicer.util.childWidgetVariables(uiWidget)
 
@@ -74,7 +76,7 @@ class PathReformatWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
 
     # Create logic class. Logic implements all computations that should be possible to run
     # in batch mode, without a graphical user interface.
-    self.logic = PathReformatLogic()
+    self.logic = CrossSectionAnalysisLogic()
     
     # Hide diameter labels. Concern only VMTK centerline models.
     self.showDiameterLabels(False)
@@ -271,10 +273,10 @@ class PathReformatWidget(ScriptedLoadableModuleWidget, VTKObservationMixin):
         return
     roi.SetDisplayVisibility(not self.ui.hideROICheckBox.checked)
 #
-# PathReformatLogic
+# CrossSectionAnalysisLogic
 #
 
-class PathReformatLogic(ScriptedLoadableModuleLogic):
+class CrossSectionAnalysisLogic(ScriptedLoadableModuleLogic):
   """This class should implement all the actual
   computation done by your module.  The interface
   should be such that other python code can import
@@ -404,10 +406,10 @@ class PathReformatLogic(ScriptedLoadableModuleLogic):
     return orient
 
 #
-# PathReformatTest
+# CrossSectionAnalysisTest
 #
 
-class PathReformatTest(ScriptedLoadableModuleTest):
+class CrossSectionAnalysisTest(ScriptedLoadableModuleTest):
   """
   This is the test case for your scripted module.
   Uses ScriptedLoadableModuleTest base class, available at:

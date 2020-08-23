@@ -1,5 +1,5 @@
 #-----------------------------------------------------------------------------
-set(MODULE_NAME PathReformat)
+set(MODULE_NAME CrossSectionAnalysis)
 
 #-----------------------------------------------------------------------------
 set(MODULE_PYTHON_SCRIPTS

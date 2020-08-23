@@ -1,15 +1,15 @@
 cmake_minimum_required(VERSION 3.13.4)
 
-project(PathReformat)
+project(CrossSectionAnalysis)
 
 #-----------------------------------------------------------------------------
 # Extension meta-information
-set(EXTENSION_HOMEPAGE "https://www.slicer.org/wiki/Documentation/Nightly/Extensions/PathReformat")
+set(EXTENSION_HOMEPAGE "https://www.slicer.org/wiki/Documentation/Nightly/Extensions/CrossSectionAnalysis")
 set(EXTENSION_CATEGORY "Utilities")
 set(EXTENSION_CONTRIBUTORS "John Doe (AnyWare Corp.)")
 set(EXTENSION_DESCRIPTION "This is an example of a simple extension")
-set(EXTENSION_ICONURL "http://www.example.com/Slicer/Extensions/PathReformat.png")
-set(EXTENSION_SCREENSHOTURLS "http://www.example.com/Slicer/Extensions/PathReformat/Screenshots/1.png")
+set(EXTENSION_ICONURL "http://www.example.com/Slicer/Extensions/CrossSectionAnalysis.png")
+set(EXTENSION_SCREENSHOTURLS "http://www.example.com/Slicer/Extensions/CrossSectionAnalysis/Screenshots/1.png")
 set(EXTENSION_DEPENDS "NA") # Specified as a list or "NA" if no dependencies
 
 #-----------------------------------------------------------------------------
@@ -19,7 +19,7 @@ include(${Slicer_USE_FILE})
 
 #-----------------------------------------------------------------------------
 # Extension modules
-add_subdirectory(PathReformat)
+add_subdirectory(CrossSectionAnalysis)
 ## NEXT_MODULE
 
 #-----------------------------------------------------------------------------

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>PathReformat</class>
- <widget class="qMRMLWidget" name="PathReformat">
+    <class>CrossSectionAnalysis</class>
+    <widget class="qMRMLWidget" name="CrossSectionAnalysis">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -367,7 +367,7 @@ Caution : ROIs not created here may also be hidden.
  <resources/>
  <connections>
   <connection>
-   <sender>PathReformat</sender>
+      <sender>CrossSectionAnalysis</sender>
    <signal>mrmlSceneChanged(vtkMRMLScene*)</signal>
    <receiver>inputSelector</receiver>
    <slot>setMRMLScene(vtkMRMLScene*)</slot>
@@ -383,7 +383,7 @@ Caution : ROIs not created here may also be hidden.
    </hints>
   </connection>
   <connection>
-   <sender>PathReformat</sender>
+      <sender>CrossSectionAnalysis</sender>
    <signal>mrmlSceneChanged(vtkMRMLScene*)</signal>
    <receiver>roiSelector</receiver>
    <slot>setMRMLScene(vtkMRMLScene*)</slot>
