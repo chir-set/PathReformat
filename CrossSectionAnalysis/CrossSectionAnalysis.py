@@ -237,9 +237,9 @@ class CrossSectionAnalysisWidget(ScriptedLoadableModuleWidget, VTKObservationMix
         self.ui.diameterLabel.setText(diameter + " mm")
     # Orientation
     orient = self.logic.getSliceOrientation()
-    orientation = "x " + str(round(orient[0], 1)) + "°,"
-    orientation += "y " + str(round(orient[1], 1)) + "°,"
-    orientation += "z " + str(round(orient[2], 1)) + "°"
+    orientation = "R " + str(round(orient[0], 1)) + "°, "
+    orientation += "A " + str(round(orient[1], 1)) + "°, "
+    orientation += "S " + str(round(orient[2], 1)) + "°"
     self.ui.orientationLabel.setText(orientation)
 
   def showRelativeDistance(self):
