@@ -8,7 +8,7 @@ The view's position and orientation are dynamically reported.
 
 Select a markup curve or a VMTK centerline model, and a 2D view.
 
-Move the slider bar to reformat the view.
+Move the slider bar to reformat the view. Optionally, change the point for relative distance calculation.
 
 ![Texte alternatif](Screenshot_0.png)
 
