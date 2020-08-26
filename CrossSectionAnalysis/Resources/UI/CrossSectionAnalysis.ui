@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
-    <class>CrossSectionAnalysis</class>
-    <widget class="qMRMLWidget" name="CrossSectionAnalysis">
+ <class>CrossSectionAnalysis</class>
+ <widget class="qMRMLWidget" name="CrossSectionAnalysis">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
     <width>363</width>
-    <height>704</height>
+    <height>710</height>
    </rect>
   </property>
   <property name="locale">
@@ -228,6 +228,20 @@
         </property>
        </widget>
       </item>
+      <item row="8" column="0">
+       <widget class="QLabel" name="label_4">
+        <property name="text">
+         <string>Relative origin:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="8" column="1">
+       <widget class="qMRMLSpinBox" name="relativeOriginSpinBox">
+        <property name="toolTip">
+         <string>Distance will be calculated relative to this point</string>
+        </property>
+       </widget>
+      </item>
      </layout>
     </widget>
    </item>
@@ -342,6 +356,11 @@ Caution : ROIs not created here may also be hidden.
    <container>1</container>
   </customwidget>
   <customwidget>
+   <class>ctkDoubleSpinBox</class>
+   <extends>QWidget</extends>
+   <header>ctkDoubleSpinBox.h</header>
+  </customwidget>
+  <customwidget>
    <class>ctkSliderWidget</class>
    <extends>QWidget</extends>
    <header>ctkSliderWidget.h</header>
@@ -358,6 +377,11 @@ Caution : ROIs not created here may also be hidden.
    <header>qMRMLNodeComboBox.h</header>
   </customwidget>
   <customwidget>
+   <class>qMRMLSpinBox</class>
+   <extends>ctkDoubleSpinBox</extends>
+   <header>qMRMLSpinBox.h</header>
+  </customwidget>
+  <customwidget>
    <class>qMRMLWidget</class>
    <extends>QWidget</extends>
    <header>qMRMLWidget.h</header>
@@ -367,7 +391,7 @@ Caution : ROIs not created here may also be hidden.
  <resources/>
  <connections>
   <connection>
-      <sender>CrossSectionAnalysis</sender>
+   <sender>CrossSectionAnalysis</sender>
    <signal>mrmlSceneChanged(vtkMRMLScene*)</signal>
    <receiver>inputSelector</receiver>
    <slot>setMRMLScene(vtkMRMLScene*)</slot>
@@ -383,7 +407,7 @@ Caution : ROIs not created here may also be hidden.
    </hints>
   </connection>
   <connection>
-      <sender>CrossSectionAnalysis</sender>
+   <sender>CrossSectionAnalysis</sender>
    <signal>mrmlSceneChanged(vtkMRMLScene*)</signal>
    <receiver>roiSelector</receiver>
    <slot>setMRMLScene(vtkMRMLScene*)</slot>
